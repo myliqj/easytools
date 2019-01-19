@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<db type="db2">
+    <schema_tj>
+        <![CDATA[
+            select m.SCHEMANAME,m.REMARKS,value(t.TAB_SL,0) TAB_SL,value(t.ALIAS_SL,0) ALIAS_SL
+              ,value(t.NICK_SL,0) NICK_SL,value(t.VIEW_SL,0) VIEW_SL,value(r.FUNC_SL,0) FUNC_SL,value(r.PROC_SL,0) PROC_SL
+              ,(select count(1) from SYSCAT.INDEXES x where x.INDSCHEMA=m.SCHEMANAME) index_sl
+              ,(select count(1) from SYSCAT.TRIGGERS x where x.TRIGSCHEMA=m.SCHEMANAME) trigger_sl
+              ,(select count(1) from SYSCAT.SEQUENCES x where x.seqschema=m.SCHEMANAME) sequence_sl
+            from SYSCAT.SCHEMATA m
+              left join table(select sum(case when t.type='T' then 1 end) tab_sl
+                  ,sum(case when t.type='A' then 1 end) alias_sl
+                  ,sum(case when t.type='N' then 1 end) nick_sl
+                  ,sum(case when t.type='V' then 1 end) view_sl
+                from syscat.tables t where t.tabschema=m.SCHEMANAME) t on 1=1
+              left join table(select sum(case when r.ROUTINETYPE='F' then 1 end) func_sl
+                  ,sum(case when r.ROUTINETYPE='P' then 1 end) proc_sl
+                from syscat.ROUTINES r where r.ROUTINESCHEMA=m.SCHEMANAME) r on 1=1
+            order by m.schemaname for read only with ur;
+        ]]>
+    </schema_tj>
+
+    <schema obj="SYSCAT.SCHEMATA">
+        <![CDATA[
+          select m.SCHEMANAME,m.REMARKS
+          from SYSCAT.SCHEMATA m
+          where m.SCHEMANAME not like 'SYS%' and m.SCHEMANAME not in ('NULLID','SQLJ')
+        ]]>
+    </schema>
+
+    <table obj="SYSCAT.TABLES" where="type='T'">
+        <![CDATA[
+          select t.TABSCHEMA,t.TABNAME,t.TYPE,t.COLCOUNT,t.KEYCOLUMNS,t.DATACAPTURE,t.REMARKS
+          from SYSCAT.TABLES t where t.type='T'
+            and t.tabschema not like 'SYS%' and t.tabschema not in ('NULLID','SQLJ')
+        ]]>
+    </table>
+    <alias obj="SYSCAT.TABLES" where="type='A'">
+        <![CDATA[
+          select t.TABSCHEMA,t.TABNAME,t.TYPE,t.COLCOUNT,t.KEYCOLUMNS,t.DATACAPTURE,t.REMARKS
+          from SYSCAT.TABLES t where t.type='A'
+            and t.tabschema not like 'SYS%' and t.tabschema not in ('NULLID','SQLJ')
+        ]]>
+    </alias>
+    <view obj="SYSCAT.VIEWS">
+        <![CDATA[
+          select v.VIEWSCHEMA,v.VIEWNAME,v.VALID,v.TEXT
+          from SYSCAT.VIEWS v
+          where v.viewschema not like 'SYS%' and v.viewschema not in ('NULLID','SQLJ')
+        ]]>
+    </view>
+    <nickname obj="SYSCAT.NICKNAMES">
+        <![CDATA[
+          select n.TABSCHEMA,n.TABNAME,n.COLCOUNT
+            ,cast(trim(varchar(n.SERVERNAME)) as varchar(128)) SERVERNAME
+            ,cast(trim(varchar(n.REMOTE_SCHEMA)) as varchar(128)) REMOTE_SCHEMA
+            ,cast(trim(varchar(n.REMOTE_TABLE)) as varchar(128)) REMOTE_TABLE
+            ,n.REMARKS
+          from SYSCAT.NICKNAMES n
+        ]]>
+    </nickname>
+    <column obj="SYSCAT.COLUMNS">
+        <![CDATA[
+          select c.COLNAME,c.COLNO,c.TYPESCHEMA,c.TYPENAME,c.LENGTH,c.SCALE,c.DEFAULT,c.NULLS
+            ,c.KEYSEQ,c.IDENTITY,c.GENERATED,c.REMARKS
+          from SYSCAT.COLUMNS c where c.TABSCHEMA=? and c.TABNAME=?
+        ]]>
+    </column>
+    <index obj="SYSCAT.INDEXES">
+        <![CDATA[
+          select i.INDSCHEMA,i.INDNAME,i.COLNAMES,i.UNIQUERULE,i.COLCOUNT,i.INDEXTYPE,i.REMARKS
+          from SYSCAT.INDEXES i where i.TABSCHEMA=? and i.TABNAME=?
+        ]]>
+    </index>
+    <trigger obj="SYSCAT.TRIGGERS">
+        <![CDATA[
+          select r.TRIGSCHEMA,r.TRIGNAME,r.TRIGTIME,r.TRIGEVENT,r.VALID,r.TEXT,r.REMARKS
+          from SYSCAT.TRIGGERS r where r.TABSCHEMA=? and r.TABNAME=?
+        ]]>
+    </trigger>
+    <sequence obj="SYSCAT.SEQUENCES">
+        <![CDATA[
+          select s.seqschema,s.seqname,s.seqtype,s.increment,s.start,s.maxvalue,s.minvalue
+            ,s.nextcachefirstvalue,s.cycle,s.cache,s.order,s.datatypeid,s.sourcetypeid
+            ,s.precision,s.origin,s.remarks
+            ,b.dschema tabschema,b.dname tabname
+            ,(select x.colname from syscat.colidentattributes x
+              where x.TABNAME=b.dname and x.tabschema=b.dschema) colname
+          from SYSCAT.SEQUENCES s
+            left join SYSIBM.SYSDEPENDENCIES b on b.btype='Q' and b.dtype='T' and s.seqtype='I'
+              and b.BSCHEMA=s.SEQSCHEMA and b.bname=s.seqname
+        ]]>
+    </sequence>
+    <procedure obj="SYSCAT.PROCEDURES">
+        <![CDATA[
+          select p.PROCSCHEMA,p.PROCNAME,p.SPECIFICNAME,p.PARM_COUNT,p.VALID
+            ,p.TEXT_BODY_OFFSET,p.TEXT,p.REMARKS
+          from SYSCAT.PROCEDURES p where p.LANGUAGE='SQL'
+            and p.procschema not like 'SYS%' and p.procschema not in ('NULLID','SQLJ')
+        ]]>
+    </procedure>
+    <function obj="SYSCAT.FUNCTIONS">
+        <![CDATA[
+          select f.FUNCSCHEMA,f.FUNCNAME,f.SPECIFICNAME,f.ORIGIN,f.RETURN_TYPE,f.TYPE,f.PARM_COUNT
+            ,f.BODY,f.REMARKS
+          from SYSCAT.FUNCTIONS f where f.LANGUAGE='SQL'
+            and f.FUNCSCHEMA not like 'SYS%' and f.FUNCSCHEMA not in ('NULLID','SQLJ')
+        ]]>
+    </function>
+
+</db>
