@@ -1,9 +1,11 @@
 package org.easytool.util;
 
+import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.ss.formula.functions.T;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.streaming.SXSSFSheet;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
+import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.easytool.dbcompare.model.DB;
 import org.easytool.dbcompare.model.DBUrl;
@@ -34,6 +36,26 @@ public class ExportExcel {
             Cell cell = row.createCell(cellNum);
             Object value = values.get(cellNum);
             generateValue(value, cell);
+
+            // 设置标题头样式
+            CellStyle colsy = sheet.getWorkbook().createCellStyle();
+            // 边框
+            colsy.setBorderTop(CellStyle.BORDER_THIN);
+            colsy.setBorderLeft(CellStyle.BORDER_THIN);
+            colsy.setBorderRight(CellStyle.BORDER_THIN);
+            colsy.setBorderBottom(CellStyle.BORDER_THIN);
+            // 背景
+            colsy.setFillForegroundColor((short)23); // GREY_25_PERCENT.index=22
+            colsy.setFillBackgroundColor((short)23); // GREY_50_PERCENT.index=23
+            //colsy.setFillPattern(CellStyle.NO_FILL);
+            colsy.setFillPattern(CellStyle.SOLID_FOREGROUND);
+            // 自动换行
+            colsy.setWrapText(true);
+            // 对齐
+            colsy.setAlignment(CellStyle.ALIGN_CENTER);
+            colsy.setVerticalAlignment(CellStyle.VERTICAL_CENTER);
+            cell.setCellStyle(colsy);
+
         }
     }
     /**
@@ -325,6 +347,12 @@ public class ExportExcel {
             format_all.put(5,style_time);
             format_all.put(6,style_dt);*/
             CellStyle style_date=null,style_time=null,style_dt=null;
+            CellStyle style_default = wb.createCellStyle(); // 仅带边框
+            style_default.setBorderTop(CellStyle.BORDER_THIN);
+            style_default.setBorderLeft(CellStyle.BORDER_THIN);
+            style_default.setBorderRight(CellStyle.BORDER_THIN);
+            style_default.setBorderBottom(CellStyle.BORDER_THIN);
+
             CellStyle[] css = new CellStyle[cols];
             for (int i = 1; i <=cols; i++) {
                 int jtype = coltype[i-1]; // java.sql.Types
@@ -361,6 +389,14 @@ public class ExportExcel {
                         css[i-1] = style_1;
                     }
                 }
+                if(css[i-1]==null){
+                    css[i-1] = style_default;
+                }else{
+                    css[i-1].setBorderTop(CellStyle.BORDER_THIN);
+                    css[i-1].setBorderLeft(CellStyle.BORDER_THIN);
+                    css[i-1].setBorderRight(CellStyle.BORDER_THIN);
+                    css[i-1].setBorderBottom(CellStyle.BORDER_THIN);
+                }
             }
             // 写内容
             int[] maxDataLen = new int[cols];
@@ -388,6 +424,10 @@ public class ExportExcel {
                     int xlsType = colxls[i - 1];
                     if(obj==null){
                         //createCellOfRs(row,i-1,null,xlsType);
+                        Cell cell = row.createCell(i-1);
+                        if(css[i-1]!=null){
+                            cell.setCellStyle(css[i-1]);
+                        }
                         continue;
                     }
                     //if (jdbcType == Types.VARCHAR
@@ -414,6 +454,7 @@ public class ExportExcel {
                 }
             }
             // 重设列宽
+            // 使用模板来输出，不能获取相应字段 Row row = sheet.getRow(0); ==>> null
             for (int i = 0; i < cols; i++) {
                 //String colname=(String)colnames.get(Integer.valueOf(i));
                 //int collen = colname.length();
@@ -429,7 +470,7 @@ public class ExportExcel {
                     setlen=4;
                 }
                 //System.out.println(colname+",i="+i+",maxlen="+maxlen+",set-collen="+(setlen*260));
-                sheet.setColumnWidth(i,setlen*260);
+                sheet.setColumnWidth(i,setlen*265); // 1/256个字符
 
             }
 
@@ -479,6 +520,13 @@ public class ExportExcel {
                 ",PCTROWSCOMPRESSED" +
                 " from syscat.tables a where a.type='T' order by TABSCHEMA,TABNAME fetch first 1011 row only";
         String fileName = "d:\\a000017.xlsx";
+        File f = new File(fileName);
+        if (f.exists()){
+            boolean isok=f.delete();
+            System.out.printf("删除文件："+fileName + " = " + isok +"\n");
+            f = null;
+            Thread.sleep(1000);
+        }
         String sheetName = "tables";
         //sql="select * from syscat.columns";
 
