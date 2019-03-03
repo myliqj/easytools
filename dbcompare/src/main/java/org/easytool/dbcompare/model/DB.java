@@ -13,6 +13,8 @@ public class DB {
         {
             put("db2", "com.ibm.db2.jcc.DB2Driver");
             put("oracle", "oracle.jdbc.driver.OracleDriver");
+            put("mssql2000", "com.microsoft.jdbc.sqlserver.SQLServerDriver");
+            put("mssql2005", "com.microsoft.sqlserver.jdbc.SQLServerDriver");
         }
     };
     private String name;

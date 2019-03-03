@@ -12,6 +12,8 @@ public class DBUrl {
             put("db2", "jdbc:db2://{#ip#}:{#port#}/{#dbname#}");
             put("oracle", "jdbc:oracle:thin:@{#ip#}:{#port#}:{#dbname#}");
             put("oracle-tns","jdbc:oracle:thin:@(DESCRIPTION =(ADDRESS_LIST =(ADDRESS=(PROTOCOL=TCP)(HOST={#ip#})(PORT={#port#})))(SOURCE_ROUTE = off)(FAILOVER = on)(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME={#dbname#})))");
+            put("mssql2000","jdbc:microsoft:sqlserver://{#ip#}:{#port#};DataBaseName={#dbname#}");
+            put("mssql2005","jdbc:sqlserver://{#ip#}:{#port#};DataBaseName={#dbname#}");
         }
     };
 
