@@ -1,125 +1,127 @@
 package org.easytool.util;
 
-import org.apache.commons.dbutils.DbUtils;
-import org.apache.commons.dbutils.QueryRunner;
-import org.apache.commons.dbutils.ResultSetHandler;
-
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Types;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
+import org.apache.commons.dbutils.DbUtils;
+ 
 public class JdbcUtils {
 
-    /**
-     * 获取表的字段类型
-     *
-     * @param connection
-     * @param table
-     * @return
-     * @throws SQLException
-     */
-    public static Map<String, Integer> getColumnTypes(Connection connection, String table, String keywordEscaper) throws SQLException {
-        StringBuilder sql = new StringBuilder();
-        sql.append("SELECT * FROM ");
-        sql.append(keywordEscaper);
-        sql.append(table);
-        sql.append(keywordEscaper);
-        sql.append(" WHERE 1=2");
-        //sql.append(" Limit 1");
+//    /**
+//     * 获取表的字段类型
+//     *
+//     * @param connection
+//     * @param table
+//     * @return
+//     * @throws SQLException
+//     */
+//    public static Map<String, Integer> getColumnTypes(Connection connection, String table, String keywordEscaper) throws SQLException {
+////        StringBuilder sql = new StringBuilder();
+////        sql.append("SELECT * FROM ");
+////        sql.append(keywordEscaper);
+////        sql.append(table);
+////        sql.append(keywordEscaper);
+////        sql.append(" WHERE 1=2");
+//    	String sql = "";
+//        //sql.append(" Limit 1");
+//
+//        ResultSetHandler<Map<String, Integer>> handler = new ResultSetHandler<Map<String, Integer>>() {
+//            public Map<String, Integer> handle(ResultSet rs) throws SQLException {
+//                Map<String, Integer> map = new HashMap<String, Integer>();
+//                ResultSetMetaData rsd = rs.getMetaData();
+//                for (int i = 0; i < rsd.getColumnCount(); i++) {
+//                    map.put(rsd.getColumnName(i + 1).toLowerCase(), rsd.getColumnType(i + 1));
+//                }
+//                return map;
+//            }
+//        };
+//
+//        QueryRunner runner = new QueryRunner();
+//        return null; //return runner.query(connection, sql , handler);
+//    }
+//
+//    /**
+//     * 获取表的字段名称
+//     *
+//     * @param conn
+//     * @param table
+//     * @return
+//     * @throws SQLException
+//     */
+//    public static List<String> getColumnNames(Connection conn, String table, String keywordEscaper) throws SQLException {
+//        StringBuilder sql = new StringBuilder();
+//        sql.append("SELECT * FROM ");
+//        sql.append(keywordEscaper);
+//        sql.append(table);
+//        sql.append(keywordEscaper);
+//        sql.append(" WHERE 1=2");
+//        //sql.append(" Limit 1");
+//
+//        ResultSetHandler<List<String>> handler = new ResultSetHandler<List<String>>() {
+//            public List<String> handle(ResultSet rs) throws SQLException {
+//                List<String> columnNames = new ArrayList<String>();
+//                ResultSetMetaData rsd = rs.getMetaData();
+//
+//                for (int i = 0, len = rsd.getColumnCount(); i < len; i++) {
+//                    columnNames.add(rsd.getColumnName(i + 1));
+//                }
+//                return columnNames;
+//            }
+//        };
+//
+//        QueryRunner runner = new QueryRunner();
+//        return runner.query(conn, sql.toString(), handler);
+//    }
 
-        ResultSetHandler<Map<String, Integer>> handler = new ResultSetHandler<Map<String, Integer>>() {
-            public Map<String, Integer> handle(ResultSet rs) throws SQLException {
-                Map<String, Integer> map = new HashMap<String, Integer>();
-                ResultSetMetaData rsd = rs.getMetaData();
-                for (int i = 0; i < rsd.getColumnCount(); i++) {
-                    map.put(rsd.getColumnName(i + 1).toLowerCase(), rsd.getColumnType(i + 1));
-                }
-                return map;
-            }
-        };
-
-        QueryRunner runner = new QueryRunner();
-        return runner.query(connection, sql.toString(), handler);
-    }
-
-    /**
-     * 获取表的字段名称
-     *
-     * @param conn
-     * @param table
-     * @return
-     * @throws SQLException
-     */
-    public static List<String> getColumnNames(Connection conn, String table, String keywordEscaper) throws SQLException {
-        StringBuilder sql = new StringBuilder();
-        sql.append("SELECT * FROM ");
-        sql.append(keywordEscaper);
-        sql.append(table);
-        sql.append(keywordEscaper);
-        sql.append(" WHERE 1=2");
-        //sql.append(" Limit 1");
-
-        ResultSetHandler<List<String>> handler = new ResultSetHandler<List<String>>() {
-            public List<String> handle(ResultSet rs) throws SQLException {
-                List<String> columnNames = new ArrayList<String>();
-                ResultSetMetaData rsd = rs.getMetaData();
-
-                for (int i = 0, len = rsd.getColumnCount(); i < len; i++) {
-                    columnNames.add(rsd.getColumnName(i + 1));
-                }
-                return columnNames;
-            }
-        };
-
-        QueryRunner runner = new QueryRunner();
-        return runner.query(conn, sql.toString(), handler);
-    }
-
-    /**
-     * 查询表中分割字段值的区域（最大值、最小值）
-     *
-     * @param conn
-     * @param sql
-     * @param splitColumn
-     * @return
-     * @throws SQLException
-     */
-    public static double[] querySplitColumnRange(Connection conn, final String sql, final String splitColumn) throws SQLException {
-        double[] minAndMax = new double[2];
-        Pattern p = Pattern.compile("\\s+FROM\\s+.*", Pattern.CASE_INSENSITIVE);
-        Matcher m = p.matcher(sql);
-
-        if (m.find() && splitColumn != null && !"".equals(splitColumn.trim())) {
-            StringBuilder sb = new StringBuilder();
-            sb.append("SELECT MIN(");
-            sb.append(splitColumn);
-            sb.append("), MAX(");
-            sb.append(splitColumn);
-            sb.append(")");
-            sb.append(m.group(0));
-
-            ResultSetHandler<double[]> handler = new ResultSetHandler<double[]>() {
-                public double[] handle(ResultSet rs) throws SQLException {
-                    double[] minAndMax = new double[2];
-                    while (rs.next()) {
-                        minAndMax[0] = rs.getDouble(1);
-                        minAndMax[1] = rs.getDouble(2);
-                    }
-
-                    return minAndMax;
-                }
-            };
-
-            QueryRunner runner = new QueryRunner();
-            return runner.query(conn, sb.toString(), handler);
-        }
-
-        return minAndMax;
-    }
+//    /**
+//     * 查询表中分割字段值的区域（最大值、最小值）
+//     *
+//     * @param conn
+//     * @param sql
+//     * @param splitColumn
+//     * @return
+//     * @throws SQLException
+//     */
+//    public static double[] querySplitColumnRange(Connection conn, final String sql, final String splitColumn) throws SQLException {
+//        double[] minAndMax = new double[2];
+//        Pattern p = Pattern.compile("\\s+FROM\\s+.*", Pattern.CASE_INSENSITIVE);
+//        Matcher m = p.matcher(sql);
+//
+//        if (m.find() && splitColumn != null && !"".equals(splitColumn.trim())) {
+//            StringBuilder sb = new StringBuilder();
+//            sb.append("SELECT MIN(");
+//            sb.append(splitColumn);
+//            sb.append("), MAX(");
+//            sb.append(splitColumn);
+//            sb.append(")");
+//            sb.append(m.group(0));
+//
+//            ResultSetHandler<double[]> handler = new ResultSetHandler<double[]>() {
+//                public double[] handle(ResultSet rs) throws SQLException {
+//                    double[] minAndMax = new double[2];
+//                    while (rs.next()) {
+//                        minAndMax[0] = rs.getDouble(1);
+//                        minAndMax[1] = rs.getDouble(2);
+//                    }
+//
+//                    return minAndMax;
+//                }
+//            };
+//
+//            QueryRunner runner = new QueryRunner();
+//            return runner.query(conn, sb.toString(), handler);
+//        }
+//
+//        return minAndMax;
+//    }
 
     /**
      * 查询表数值类型的主键
@@ -131,26 +133,26 @@ public class JdbcUtils {
      * @return
      * @throws SQLException
      */
-    public static String getDigitalPrimaryKey(Connection conn, String catalog, String schema, String table, String keywordEscaper)
-            throws SQLException {
-        List<String> primaryKeys = new ArrayList<String>();
-        ResultSet rs = conn.getMetaData().getPrimaryKeys(catalog, schema, table);
-        while (rs.next()) {
-            primaryKeys.add(rs.getString("COLUMN_NAME"));
-        }
-        rs.close();
-
-        if (primaryKeys.size() > 0) {
-            Map<String, Integer> map = getColumnTypes(conn, table, keywordEscaper);
-            for (String pk : primaryKeys) {
-                if (isDigitalType(map.get(pk.toLowerCase()))) {
-                    return pk;
-                }
-            }
-        }
-
-        return null;
-    }
+//    public static String getDigitalPrimaryKey(Connection conn, String catalog, String schema, String table, String keywordEscaper)
+//            throws SQLException {
+//        List<String> primaryKeys = new ArrayList<String>();
+//        ResultSet rs = conn.getMetaData().getPrimaryKeys(catalog, schema, table);
+//        while (rs.next()) {
+//            primaryKeys.add(rs.getString("COLUMN_NAME"));
+//        }
+//        rs.close();
+//
+//        if (primaryKeys.size() > 0) {
+//            Map<String, Integer> map = getColumnTypes(conn, table, keywordEscaper);
+//            for (String pk : primaryKeys) {
+//                if (isDigitalType(map.get(pk.toLowerCase()))) {
+//                    return pk;
+//                }
+//            }
+//        }
+//
+//        return null;
+//    }
 
     /**
      * 判断字段类型是否为数值类型
@@ -234,15 +236,29 @@ public class JdbcUtils {
 
     public static boolean isSameMetaData(ResultSetMetaData r1,ResultSetMetaData r2
             ,boolean isCompatible) throws Exception {
-        if(r1.getColumnCount()!=r2.getColumnCount()) return false;
-        for (int i = 1; i < r1.getColumnCount(); i++) {
+        if(r1.getColumnCount()!=r2.getColumnCount()) {
+        	System.out.println("  字段数量不相同:" + r1.getColumnCount() + " -> "+r2.getColumnCount());
+        	return false;
+        }
+        boolean isok = true;
+        for (int i = 1; i <= r1.getColumnCount(); i++) {
+        	//System.out.println(r1.getColumnName(i) + " java-type:"+r1.getColumnType(i) + " -> "+r2.getColumnType(i));
+        	
             if (!r1.getColumnName(i).equals(r2.getColumnName(i))
                     && !isSameJdbcType(r1.getColumnType(i),r2.getColumnType(i),isCompatible)){
                 // 判断名称是否完全相同，类型是否兼容
-                return false;
+            	isok = false;
+            	break; 
             }
         }
-        return true;
+        if (!isok){
+        	System.out.println("  字段类型不兼容:");
+        	for (int i = 1; i <= r1.getColumnCount(); i++) {
+            	System.out.println("  " +r1.getColumnName(i) + " java-type:"+r1.getColumnType(i) + " -> "+r2.getColumnType(i));
+        	}
+        }
+        
+        return isok;
     }
 
     public static String getParamsPair(ResultSetMetaData r1) throws Exception{
@@ -259,7 +275,8 @@ public class JdbcUtils {
     public static int[] getColumnTypes(Connection conn,String sql) throws Exception{
         ResultSetMetaData rsd = conn.createStatement().executeQuery(sql).getMetaData();
         int[] colTypes = new int[rsd.getColumnCount()];
-        for(int i=0; i<colTypes.length-1;i++){
+        for(int i=0; i<=colTypes.length-1;i++){
+        	//System.out.println(i + " " +rsd.getColumnName(i+1) + " " +rsd.getColumnType(i+1));
             colTypes[i] = rsd.getColumnType(i+1);
         }
         return colTypes;

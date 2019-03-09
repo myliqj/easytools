@@ -33,7 +33,10 @@ public class DBUrl {
         this.url = JDBC_URL.get(dbType).replace("{#dbname#}", this.dbName)
                 .replace("{#ip#}", this.ip).replace("{#port#}", this.port);
     }
-
+    public DBUrl(String dbName,String url){
+        this.dbName=dbName;
+        this.url = url;
+    }
     public String getUrl() {
         return url;
     }

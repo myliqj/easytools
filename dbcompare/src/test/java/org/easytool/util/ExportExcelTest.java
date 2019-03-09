@@ -27,9 +27,10 @@ public class ExportExcelTest extends TestCase{
     }
     public void testCreateXlsx() throws Exception {
         String dbName = "db2_test2_local";
+        dbName="fssbcs";
         //sql="select * from syscat.columns";
 
-        DB db = DbUtilTest.testDB.get("db2_test2_local");
+        DB db = DbUtilTest.testDB.get(dbName);
         Connection conn = db.getConn();
         try{
             // tables
