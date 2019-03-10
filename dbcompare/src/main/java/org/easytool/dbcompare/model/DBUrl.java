@@ -17,55 +17,67 @@ public class DBUrl {
         }
     };
 
-    private String url;
-    private String ip;
-    private String port;
-    private String dbName;
+    private String urlDbType;
+    private String urlFull;
+    private String urlIp;
+    private String urlPort;
+    private String urlDbName;
     /**
      * 唯一确定一个数据库，包括IP+DbName
-     * @param dbType jdbc数据库类型:db2/oracle ，确定驱动类型
-     * @param dbName 数据库名称
-     * @param ip IP地址
-     * @param port 端口
+     * @param urlDbType jdbc数据库类型:db2/oracle ，确定驱动类型 ,指 url_db_type
+     * @param urlDbName 数据库名称
+     * @param urlIp IP地址
+     * @param urlPort 端口
      */
-    public DBUrl(String dbType,String dbName,String ip,String port){
-        this.dbName=dbName;this.ip=ip; this.port=port;
-        this.url = JDBC_URL.get(dbType).replace("{#dbname#}", this.dbName)
-                .replace("{#ip#}", this.ip).replace("{#port#}", this.port);
+    public DBUrl(String urlDbType,String urlDbName,String urlIp,String urlPort){
+        this.urlDbType=urlDbType;
+        this.urlDbName=urlDbName;this.urlIp=urlIp; this.urlPort=urlPort;
+        this.urlFull = JDBC_URL.get(this.urlDbType).replace("{#dbname#}", this.urlDbName)
+                .replace("{#ip#}", this.urlIp).replace("{#port#}", this.urlPort);
     }
-    public DBUrl(String dbName,String url){
-        this.dbName=dbName;
-        this.url = url;
-    }
-    public String getUrl() {
-        return url;
-    }
-
-    public void setUrl(String url) {
-        this.url = url;
+    public DBUrl(String urlDbType,String urlDbName,String urlFull){
+        this.urlDbType=urlDbType;
+        this.urlDbName=urlDbName;
+        this.urlFull = urlFull;
     }
 
-    public String getIp() {
-        return ip;
+    public String getUrlFull() {
+        return urlFull;
     }
 
-    public void setIp(String ip) {
-        this.ip = ip;
+    public void setUrlFull(String urlFull) {
+        this.urlFull = urlFull;
     }
 
-    public String getPort() {
-        return port;
+    public String getUrlIp() {
+        return urlIp;
     }
 
-    public void setPort(String port) {
-        this.port = port;
+    public void setUrlIp(String urlIp) {
+        this.urlIp = urlIp;
     }
 
-    public String getDbName() {
-        return dbName;
+    public String getUrlPort() {
+        return urlPort;
     }
 
-    public void setDbName(String dbName) {
-        this.dbName = dbName;
+    public void setUrlPort(String urlPort) {
+        this.urlPort = urlPort;
+    }
+
+    public String getUrlDbName() {
+        return urlDbName;
+    }
+
+    public void setUrlDbName(String urlDbName) {
+        this.urlDbName = urlDbName;
+    }
+
+    public String getUrlDbType() {
+        return urlDbType;
+    }
+
+    public void setUrlDbType(String urlDbType) {
+        this.urlDbType = urlDbType;
     }
 }
