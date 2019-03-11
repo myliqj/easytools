@@ -128,7 +128,7 @@ public class CopyDB {
             Statement stmt = srcConn.createStatement();
             ResultSetMetaData rsd = null;
             try{
-                ResultSet rs = stmt.executeQuery("select * from " + srcTab + " where 1=2");
+                ResultSet rs = stmt.executeQuery("select * from " + srcTab + " where 1=2 for read only with ur");
                 rsd = rs.getMetaData();
                 //DbUtils.closeQuietly(rs);
             }catch (Exception e01){
