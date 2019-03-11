@@ -64,11 +64,11 @@ public class CopyDB {
     }
     public static void testCopyTabs(String Tab,String srcWhere) throws Exception{
 
-        DB src = new DB("fssbcs", "db2", "fssb", "Fscs@0901"
-                , new DBUrl("db2", "fssbcs", "200.30.10.101", "60000"));
+        DB src = new DB("fsylgz", "db2", "zkb_gzyh", "Systemgz3650"
+                , new DBUrl("db2", "fsylgz", "200.30.20.24", "50000"));
 
         DB desc = new DB("sj_2019", "mssql2005", "sj2019", "sj#2019"
-                , new DBUrl("mssql2005", "sj_hx1_fssb_src_2019", "localhost", "1433"));
+                , new DBUrl("mssql2005", "sj_hx1_ylgz_src_2019", "localhost", "1433"));
 
         String srcTab = Tab;
         String descTab = srcTab;
@@ -128,7 +128,7 @@ public class CopyDB {
             Statement stmt = srcConn.createStatement();
             ResultSetMetaData rsd = null;
             try{
-                ResultSet rs = stmt.executeQuery("select * from " + srcTab + " where 1=2");
+                ResultSet rs = stmt.executeQuery("select * from " + srcTab + " where 1=2 for read only with ur");
                 rsd = rs.getMetaData();
                 //DbUtils.closeQuietly(rs);
             }catch (Exception e01){
