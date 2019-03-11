@@ -68,7 +68,7 @@ public class CopyDB {
                 , new DBUrl("db2", "fssbcs", "200.30.10.101", "60000"));
 
         DB desc = new DB("sj_2019", "mssql2005", "sj2019", "sj#2019"
-                , new DBUrl("mssql2005", "sj_hx1_fsds_src_2019", "localhost", "1433"));
+                , new DBUrl("mssql2005", "sj_hx1_fssb_src_2019", "localhost", "1433"));
 
         String srcTab = Tab;
         String descTab = srcTab;
