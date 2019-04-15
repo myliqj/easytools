@@ -46,4 +46,63 @@ public class DB {
         Connection conn = DriverManager.getConnection(url.getUrl(), user, pwd);
         return conn;
     }
+
+	public static Map<String, String> getDRIVER() {
+		return DRIVER;
+	}
+
+	public static void setDRIVER(Map<String, String> dRIVER) {
+		DRIVER = dRIVER;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public String getDbType() {
+		return dbType;
+	}
+
+	public void setDbType(String dbType) {
+		this.dbType = dbType;
+	}
+
+	public String getDriver() {
+		return driver;
+	}
+
+	public void setDriver(String driver) {
+		this.driver = driver;
+	}
+
+	public DBUrl getUrl() {
+		return url;
+	}
+
+	public void setUrl(DBUrl url) {
+		this.url = url;
+	}
+
+	public String getUser() {
+		return user;
+	}
+
+	public void setUser(String user) {
+		this.user = user;
+	}
+
+	public String getPwd() {
+		return pwd;
+	}
+
+	public void setPwd(String pwd) {
+		this.pwd = pwd;
+	}
+    
+    
+    
 }

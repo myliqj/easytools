@@ -510,6 +510,206 @@ public class ExportExcel {
         }
 
     }
+    
+
+    public static boolean ResultSetToExeclStartRow(ResultSet rs,String outFileName
+    		,String outSheetName,int startRow,String inFileName) throws Exception {
+//        String outFileName = "d:\\a000003.xlsx";
+//        String outSheetName = "数据01";
+//        ResultSet rs = null;
+
+        // 写表头
+        ResultSetMetaData rsmd = rs.getMetaData();
+        int cols=rsmd.getColumnCount();
+        int[] coltype= new int[cols];
+        int[] colxls= new int[cols];
+        Map<Integer, Object> colnames = new HashMap<Integer, Object>();
+        for (int i = 1; i <=cols; i++) {
+            coltype[i-1] = rsmd.getColumnType(i); // java.sql.Types
+            colxls[i-1] = getXlsType(coltype[i-1]);
+            String cname= rsmd.getColumnName(i).toUpperCase();
+            colnames.put(i-1,cname);
+        }
+        //boolean isSucc = createTemplateFile(outFileName,outSheetName,colnames,null);
+        //if(!isSucc) return false;
+        SXSSFWorkbook wb =  null;
+        try {
+            InputStream is = new FileInputStream(inFileName);
+            XSSFWorkbook xwb = new XSSFWorkbook(is);
+            wb = new SXSSFWorkbook(xwb);
+            Sheet sheet = wb.getSheet(outSheetName);
+            /*// yyyy-mm-dd hh:mm:ss
+            // date
+            CellStyle style_date = wb.createCellStyle();
+            style_date.setDataFormat(wb.createDataFormat().getFormat("yyyy-mm-dd"));
+            // time
+            CellStyle style_time = wb.createCellStyle();
+            style_time.setDataFormat(wb.createDataFormat().getFormat("hh:mm:ss"));
+            // datetime
+            CellStyle style_dt = wb.createCellStyle();
+            style_dt.setDataFormat(wb.createDataFormat().getFormat("yyyy-mm-dd hh:mm:ss"));
+
+            Map<Integer,CellStyle> format_all = new HashMap<Integer,CellStyle>();
+            format_all.put(4,style_date);
+            format_all.put(5,style_time);
+            format_all.put(6,style_dt);*/
+            CellStyle style_date=null,style_time=null,style_dt=null;
+            CellStyle style_default = wb.createCellStyle(); // 仅带边框
+            style_default.setBorderTop(CellStyle.BORDER_THIN);
+            style_default.setBorderLeft(CellStyle.BORDER_THIN);
+            style_default.setBorderRight(CellStyle.BORDER_THIN);
+            style_default.setBorderBottom(CellStyle.BORDER_THIN);
+
+            CellStyle[] css = new CellStyle[cols];
+            for (int i = 1; i <=cols; i++) {
+                int jtype = coltype[i-1]; // java.sql.Types
+                if(jtype==91){
+                    if (style_date==null){
+                        style_date = wb.createCellStyle();
+                        style_date.setDataFormat(wb.createDataFormat().getFormat("yyyy-mm-dd"));
+                    }
+                    css[i-1] = style_date;
+                }else if(jtype==92){
+                    if (style_time==null){
+                        style_time = wb.createCellStyle();
+                        style_time.setDataFormat(wb.createDataFormat().getFormat("hh:mm:ss"));
+                    }
+                    css[i-1] = style_time;
+                }else if(jtype==93){
+                    if (style_dt==null){
+                        style_dt = wb.createCellStyle();
+                        style_dt.setDataFormat(wb.createDataFormat().getFormat("yyyy-mm-dd hh:mm:ss"));
+                    }
+                    css[i-1] = style_dt;
+                }else if(jtype==2||jtype==3){
+                    // NUMERIC         =   2;
+                    // DECIMAL         =   3;
+                    int scale = rsmd.getScale(i);
+                    int len = rsmd.getPrecision(i);
+                    if (scale>0){
+                        String dstr="0.";
+                        while(dstr.length()<(scale+2)){
+                            dstr+="0";
+                        }
+                        CellStyle style_1 = wb.createCellStyle();
+                        style_1.setDataFormat(wb.createDataFormat().getFormat(dstr));
+                        css[i-1] = style_1;
+                    }
+                }
+                if(css[i-1]==null){
+                    css[i-1] = style_default;
+                }else{
+                    css[i-1].setBorderTop(CellStyle.BORDER_THIN);
+                    css[i-1].setBorderLeft(CellStyle.BORDER_THIN);
+                    css[i-1].setBorderRight(CellStyle.BORDER_THIN);
+                    css[i-1].setBorderBottom(CellStyle.BORDER_THIN);
+                }
+            }
+            // 写内容
+            int[] maxDataLen = new int[cols];
+            // 初始化为标题
+            for (int i = 0; i < cols; i++) {
+                String colname=(String)colnames.get(Integer.valueOf(i));
+                maxDataLen[i] = colname.getBytes().length;
+                if(coltype[i]==91){
+                    maxDataLen[i] = "yyyy-mm-dd".length();
+                }else if(coltype[i]==92){
+                    maxDataLen[i] = "hh:mm:ss".length();
+                }else if(coltype[i]==93){
+                    maxDataLen[i] = "yyyy-mm-dd hh:mm:ss".length();
+                }
+            }
+
+            int startRowIndex = startRow -2;
+            int rowCount = 0;
+            while (rs.next()) {
+                rowCount++; startRowIndex++;
+                Row row = sheet.createRow(startRowIndex); // index从0开始的
+                for (int i = 1; i <=cols; i++) {
+                    Object obj = null;
+                    obj = rs.getObject(i);
+                    int jdbcType = coltype[i - 1];
+                    int xlsType = colxls[i - 1];
+                    if(obj==null){
+                        //createCellOfRs(row,i-1,null,xlsType);
+                        Cell cell = row.createCell(i-1);
+                        if(css[i-1]!=null){
+                            cell.setCellStyle(css[i-1]);
+                        }
+                        continue;
+                    }
+                    //if (jdbcType == Types.VARCHAR
+                    //        || jdbcType == Types.DECIMAL
+                    //        || jdbcType == Types.INTEGER){ // 最常用类型
+                    if(jdbcType == Types.CLOB){ // 2005 CLOB
+                        java.sql.Clob clob = (java.sql.Clob) obj;
+                        obj = clob.getSubString((long)1, (int)clob.length());
+                    }else if(jdbcType == Types.BLOB) { // 2004 BLOB
+                        java.sql.Blob blob = (java.sql.Blob) obj;
+                        byte[] val = blob.getBytes((long) 1, (int) blob.length());
+                        obj = new String(val);
+                    }
+                    //createCellOfRs(row,i-1,obj,xlsType,format_all);
+                    Cell cell = row.createCell(i-1);
+                    generateValueOfRs(obj, cell, xlsType,i-1,maxDataLen);
+                    if(css[i-1]!=null){
+                        cell.setCellStyle(css[i-1]);
+                    }
+
+                }
+                if (rowCount%1000==0){
+                    System.out.println("[处理中]处理行数：" + rowCount);
+                }
+            }
+            // 重设列宽
+            // 使用模板来输出，不能获取相应字段 Row row = sheet.getRow(0); ==>> null
+            if (1==2){
+	            for (int i = 0; i < cols; i++) {
+	                //String colname=(String)colnames.get(Integer.valueOf(i));
+	                //int collen = colname.length();
+	                int maxlen = maxDataLen[i];
+	                //int jtype = coltype[i];
+	                int setlen = maxlen;
+	                //if(!(jtype==91||jtype==92||jtype==93)){
+	                //}
+	                if (setlen>25){
+	                    setlen=25;
+	                }
+	                if (setlen<4){
+	                    setlen=4;
+	                }
+	                //System.out.println(colname+",i="+i+",maxlen="+maxlen+",set-collen="+(setlen*260));
+	                sheet.setColumnWidth(i,setlen*265); // 1/256个字符
+	
+	            }
+            }
+
+            System.out.println("[完成]处理行数：" + rowCount);
+
+            if (rowCount>0) {
+                OutputStream fos = null;
+                try {
+                    fos = new FileOutputStream(new File(outFileName));
+                    wb.write(fos);
+                    fos.flush();
+                    System.out.println("保存成功：" + outFileName);
+                } finally {
+                    if (fos != null) fos.close();
+                }
+            }
+            return true;
+        }catch (Exception ex){
+            ex.printStackTrace();
+            return false;
+        } finally {
+            // 删除临时文件
+            if(wb!=null){
+                wb.dispose();
+                wb.close();
+            }
+        }
+
+    }
 
     public static void main(String[] args) throws Exception {
 
