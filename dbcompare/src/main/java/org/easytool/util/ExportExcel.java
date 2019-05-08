@@ -513,7 +513,7 @@ public class ExportExcel {
     
 
     public static boolean ResultSetToExeclStartRow(ResultSet rs,String outFileName
-    		,String outSheetName,int startRow,String inFileName) throws Exception {
+    		,String inSheetName,String outSheetName,int startRow,String inFileName) throws Exception {
 //        String outFileName = "d:\\a000003.xlsx";
 //        String outSheetName = "数据01";
 //        ResultSet rs = null;
@@ -530,13 +530,20 @@ public class ExportExcel {
             String cname= rsmd.getColumnName(i).toUpperCase();
             colnames.put(i-1,cname);
         }
-        //boolean isSucc = createTemplateFile(outFileName,outSheetName,colnames,null);
-        //if(!isSucc) return false;
+        File inFile = new File(inFileName); 
+        if (!inFile.exists()){
+            boolean isSucc = createTemplateFile(inFileName,inSheetName,colnames,null);
+            if(!isSucc) return false;
+        }
         SXSSFWorkbook wb =  null;
         try {
             InputStream is = new FileInputStream(inFileName);
             XSSFWorkbook xwb = new XSSFWorkbook(is);
             wb = new SXSSFWorkbook(xwb);
+            
+            if (!inSheetName.equals(outSheetName)){
+            	wb.setSheetName(wb.getSheetIndex(inSheetName), outSheetName);
+            }
             Sheet sheet = wb.getSheet(outSheetName);
             /*// yyyy-mm-dd hh:mm:ss
             // date
@@ -620,7 +627,7 @@ public class ExportExcel {
                 }
             }
 
-            int startRowIndex = startRow -2;
+            int startRowIndex = startRow-2;
             int rowCount = 0;
             while (rs.next()) {
                 rowCount++; startRowIndex++;

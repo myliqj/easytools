@@ -3,6 +3,8 @@ package org.easytool.util;
 import org.easytool.dbcompare.model.DB;
 import org.easytool.dbcompare.model.DBUrl;
 
+import java.sql.Connection;
+import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -30,4 +32,11 @@ public class DbUtilTest {
         }
     };
 
+	public static void execSql(Connection conn,String[] sql) throws Exception{
+		Statement stmt = conn.createStatement();
+		for (String s : sql) {			
+			stmt.execute(s);
+		}
+		stmt.close();
+	}
 }
